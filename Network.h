@@ -49,27 +49,29 @@ public:
             // single mini batch
             vector<int> indices = getRandomNumbers(0, rows, trainingSize);
             cout << "Processing the " << i << "th epoch. Size of the mini batch : "<< indices.size() << endl;
+            y_data.clear();
             for(int j=0; j < indices.size(); j++) {
                 auto it = networkLayers.begin();
                 // create new vector
                 float dataItem[cols];
-                for(int k=0;k<cols-1;k++) 
-                    dataItem[k+1] = array[j][k];
+                int k;
+                for(k=0;k<cols-1;k++) 
+                    dataItem[k+1] = array[indices[j]][k];
                 dataItem[0] = 1.0;
-
+                y_data.push_back(array[indices[j]][k]);
                 it->initializeNeurons(dataItem);
                 it++;
                 it->forwardPropagate();
                 it++;
                 it->forwardPropagate();
-                //break;
             }
-            //break;
+            break;
         }
     }
 
     vector<int> getRandomNumbers(int start, int end, int size) {
-        default_random_engine generator;
+        random_device rd; 
+        mt19937 generator(rd()); 
         uniform_int_distribution<int> distribution(start,end);
     
         vector<int> indices;
@@ -83,6 +85,16 @@ public:
     void loadInputData(float data[]) {
         NetworkLayer* firstLayer = &networkLayers.front();
         firstLayer->initializeNeurons(data);
+    }
+
+    vector<float> getNetWorkOutput() {
+        auto it = networkLayers.back();
+        vector<Neuron> neurons = it.getNeurons();
+        vector<float> outputs;
+        for(int i=1; i < neurons.size(); i++) {
+            outputs.push_back(neurons[i].getValue());
+        }
+        return outputs;
     }
 };
 

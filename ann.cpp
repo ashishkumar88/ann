@@ -19,11 +19,10 @@ int main() {
 
     NetworkLayer inputLayer(cols-1);
     NetworkLayer hiddenLayer(4);
-    NetworkLayer outputLayer(2);
+    NetworkLayer outputLayer(1);
 
     ann.add(inputLayer, "input").add(hiddenLayer, "hidden").add(outputLayer, "output");
     ann.train(data, 100, 150);
     //ann.showLayers();
-    
     return 0 ;
 }
