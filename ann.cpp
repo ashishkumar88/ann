@@ -11,19 +11,19 @@ using namespace std;
 
 int main() {
     Network ann;
-    NetworkLayer inputLayer(7);
-    NetworkLayer hiddenLayer(1);
-    NetworkLayer outputLayer(2);
-
-    ann.add(inputLayer, "input").add(hiddenLayer, "hidden").add(outputLayer, "output");
-    ann.showLayers();
-
     //initializing the array of data
     float data[210][8] = {{0.0}};
     Util util ;
     util.loadCSV("./data/seeds_dataset.csv", data);
-   
-    util.printData(data);
+    int cols = sizeof data[0] / sizeof(float);
+
+    NetworkLayer inputLayer(cols+1);
+    NetworkLayer hiddenLayer(4);
+    NetworkLayer outputLayer(2);
+
+    ann.add(inputLayer, "input").add(hiddenLayer, "hidden").add(outputLayer, "output");
+    ann.train(data, 100, 150);
+    ann.showLayers();
     
     return 0 ;
 }
