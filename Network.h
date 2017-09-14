@@ -5,6 +5,8 @@
 #include <iostream>
 #include <math.h>
 #include <random>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std ;
 
@@ -15,6 +17,7 @@ private:
     vector<float> y_data;
 public:
     Network& add(NetworkLayer& layer, string name) {
+        srand(time(NULL));
         layer.setName(name);
         if(networkLayers.size() != 0) {
             NetworkLayer* last_layer = &networkLayers.back();
@@ -23,18 +26,19 @@ public:
             last_layer->initializeWeights(size_current_layer, size_last_layer);
             for(int i=0; i < size_current_layer; i++) {
                 for(int j=0; j < size_last_layer+1; j++) {
-                    float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    float r = (float) rand()/RAND_MAX;
                     last_layer->setWeight(i,j,r);
                 }
             }
         }
+
         networkLayers.push_back(move(layer));
         return *this;
     }
 
     void showLayers() {
         for (auto& inner : networkLayers) {
-            inner.showWeights();
+            inner.showNeurons();
         }
     }
 
@@ -54,10 +58,13 @@ public:
                 dataItem[0] = 1.0;
 
                 it->initializeNeurons(dataItem);
-                cout << it->getNeurons().size() << ", " << it->getWeights()[0].size() << endl;
                 it++;
-
+                it->forwardPropagate();
+                it++;
+                it->forwardPropagate();
+                //break;
             }
+            //break;
         }
     }
 
@@ -71,25 +78,6 @@ public:
             indices.push_back(distribution(generator));
         }
         return indices;
-    }
-
-    float activation(NetworkLayer* layer, int nodeId) {
-        float activationValue = -1;
-        NetworkLayer current = *layer;
-        NetworkLayer previous = *(layer-1);
-        int length = previous.getSize();
-        vector<vector<float>> weights = previous.getWeights();
-        vector<Neuron> neurons = previous.getNeurons();
-        for(int i=0; i < length; i++) {
-            float nodeValue = neurons[i].getValue();
-            activationValue = activationValue + weights[nodeId][i] * nodeValue;
-        }
-        return activationValue;
-    }
-
-    float transfer(float activationValue) {
-        float expo = exp(activationValue);
-        return 1.0/(1.0 + expo);
     }
 
     void loadInputData(float data[]) {

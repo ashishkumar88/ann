@@ -23,7 +23,7 @@ int main() {
 
     ann.add(inputLayer, "input").add(hiddenLayer, "hidden").add(outputLayer, "output");
     ann.train(data, 100, 150);
-    ann.showLayers();
+    //ann.showLayers();
     
     return 0 ;
 }

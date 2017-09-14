@@ -5,9 +5,13 @@ class Neuron {
 private:
     float value;
 public:
-    // Neuron(float input) {
-    //     value = input;
-    // }
+    Neuron() {
+        value = 1.0;
+    }
+    
+    Neuron(float input) {
+        value = input;
+    }
 
     float getValue() {
         return value;
