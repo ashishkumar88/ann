@@ -70,6 +70,14 @@ class Util {
             }
         }
 
+        string vectorToString(vector<float> data) {
+            string out = "";
+            for (float& a : data) {
+                out = out + to_string(a) + ", ";
+            }
+            return out;   
+        }
+
 };
 
 #endif

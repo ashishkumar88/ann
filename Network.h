@@ -7,6 +7,7 @@
 #include <random>
 #include <cstdlib>
 #include <ctime>
+#include "Util.h"
 
 using namespace std ;
 
@@ -64,6 +65,9 @@ public:
                 it->forwardPropagate();
                 it++;
                 it->forwardPropagate();
+                Util util;
+
+                cout << util.vectorToString(this->getNetWorkOutput()) << endl;
             }
             break;
         }
