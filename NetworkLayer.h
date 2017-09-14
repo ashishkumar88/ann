@@ -15,8 +15,8 @@ private:
     vector<vector<float>> weights;
 public:
     NetworkLayer(int size) {
-        this->size = size;
-        for(int i=0; i < size; i++) {
+        this->size = size+1;
+        for(int i=0; i < this->size; i++) {
             Neuron neuron;
             neurons.push_back(neuron);
         }

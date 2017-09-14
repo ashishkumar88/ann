@@ -20,7 +20,7 @@ public:
             NetworkLayer* last_layer = &networkLayers.back();
             int size_last_layer = last_layer->getSize();
             int size_current_layer = layer.getSize();
-            last_layer->initializeWeights(size_current_layer, size_last_layer+1);
+            last_layer->initializeWeights(size_current_layer, size_last_layer);
             for(int i=0; i < size_current_layer; i++) {
                 for(int j=0; j < size_last_layer+1; j++) {
                     float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -44,9 +44,19 @@ public:
         for(int i = 0; i < epoch; i++) {
             // single mini batch
             vector<int> indices = getRandomNumbers(0, rows, trainingSize);
+            cout << "Processing the " << i << "th epoch. Size of the mini batch : "<< indices.size() << endl;
             for(int j=0; j < indices.size(); j++) {
                 auto it = networkLayers.begin();
-                it->initializeNeurons(array[j]);
+                // create new vector
+                float dataItem[cols];
+                for(int k=0;k<cols-1;k++) 
+                    dataItem[k+1] = array[j][k];
+                dataItem[0] = 1.0;
+
+                it->initializeNeurons(dataItem);
+                cout << it->getNeurons().size() << ", " << it->getWeights()[0].size() << endl;
+                it++;
+
             }
         }
     }

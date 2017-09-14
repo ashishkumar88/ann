@@ -17,7 +17,7 @@ int main() {
     util.loadCSV("./data/seeds_dataset.csv", data);
     int cols = sizeof data[0] / sizeof(float);
 
-    NetworkLayer inputLayer(cols+1);
+    NetworkLayer inputLayer(cols-1);
     NetworkLayer hiddenLayer(4);
     NetworkLayer outputLayer(2);
 
