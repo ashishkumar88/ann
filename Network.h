@@ -68,6 +68,15 @@ public:
                 Util util;
 
                 cout << util.vectorToString(this->getNetWorkOutput()) << endl;
+
+                //error for the output layer
+                //TODO::need to move this into a function
+                float error ;
+                vector<float> outputs  = this->getNetWorkOutput() ;
+                for(int p=0;p<outputs.size();p++){
+                    error = (array[indices[j]][k] - outputs[p])*transferDerivative(outputs[p]);
+                }
+
             }
             break;
         }
@@ -100,6 +109,11 @@ public:
         }
         return outputs;
     }
+
+    float transferDerivative(float output){
+        return output*(1.0-output);         
+    }
+
 };
 
 #endif
