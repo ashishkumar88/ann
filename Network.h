@@ -43,6 +43,9 @@ public:
         }
     }
 
+    /*
+    * Training using stochastic gradient descent - mini batch algorithm
+    */
     template <size_t rows, size_t cols>
     void train(float (&array)[rows][cols], int epoch, int trainingSize) {
         // iterating through epochs
@@ -52,7 +55,6 @@ public:
             cout << "Processing the " << i << "th epoch. Size of the mini batch : "<< indices.size() << endl;
             y_data.clear();
             for(int j=0; j < indices.size(); j++) {
-                auto it = networkLayers.begin();
                 // create new vector
                 float dataItem[cols];
                 int k;
@@ -60,25 +62,23 @@ public:
                     dataItem[k+1] = array[indices[j]][k];
                 dataItem[0] = 1.0;
                 y_data.push_back(array[indices[j]][k]);
-                it->initializeNeurons(dataItem);
-                it++;
-                it->forwardPropagate();
-                it++;
-                it->forwardPropagate();
-                Util util;
-
-                cout << util.vectorToString(this->getNetWorkOutput()) << endl;
 
                 //error for the output layer
-                //TODO::need to move this into a function
-                float error ;
-                vector<float> outputs  = this->getNetWorkOutput() ;
-                for(int p=0;p<outputs.size();p++){
-                    error = (array[indices[j]][k] - outputs[p])*transferDerivative(outputs[p]);
-                }
-
+                vector<float> outputs  = this->getNetWorkOutput(dataItem) ;
+                this->calculateErrorOuterLayer(outputs);
             }
             break;
+        }
+    }
+
+    void calculateErrorOuterLayer(vector<float> outputs) {
+        auto it = &networkLayers.back();
+        auto list = it->getNeurons().begin();
+        float error ;
+        for(int p=0;p<outputs.size();p++){            
+            error = (y_data[p] - outputs[p])*transferDerivative(outputs[p]);
+            list->setError(error);
+            list++;
         }
     }
 
@@ -100,9 +100,16 @@ public:
         firstLayer->initializeNeurons(data);
     }
 
-    vector<float> getNetWorkOutput() {
-        auto it = networkLayers.back();
-        vector<Neuron> neurons = it.getNeurons();
+    vector<float> getNetWorkOutput(float dataItem[]) {
+        auto it = networkLayers.begin();
+        it->initializeNeurons(dataItem);
+        it++;
+        it->forwardPropagate();
+        it++;
+        it->forwardPropagate();
+
+        auto back = networkLayers.back();
+        vector<Neuron> neurons = back.getNeurons();
         vector<float> outputs;
         for(int i=1; i < neurons.size(); i++) {
             outputs.push_back(neurons[i].getValue());

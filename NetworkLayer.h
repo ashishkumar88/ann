@@ -92,7 +92,7 @@ public:
     }
 
     float transfer(float activationValue) {
-        float expo = exp(activationValue);
+        float expo = exp(-activationValue);
         float sig = 1.0/(1.0 + expo);
         return sig;
     }
