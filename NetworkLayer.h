@@ -35,7 +35,7 @@ public:
         return name;
     }
 
-    vector<Neuron> getNeurons() {
+    vector<Neuron>& getNeurons() {
         return neurons;
     }
 
@@ -43,7 +43,7 @@ public:
         weights[row][column] = value;
     }
 
-    vector<vector<float>> getWeights() {
+    vector<vector<float>>& getWeights() {
         return weights;
     }
 

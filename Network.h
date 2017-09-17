@@ -9,13 +9,20 @@
 #include <ctime>
 #include "Util.h"
 
+#include "tensorflow/cc/client/client_session.h"
+#include "tensorflow/cc/ops/standard_ops.h"
+#include "tensorflow/core/framework/tensor.h"
+
 using namespace std ;
+using namespace tensorflow;
+using namespace tensorflow::ops;
 
 class Network {
 private:
     vector<NetworkLayer> networkLayers;
     vector<vector<float>> x_data;
     vector<float> y_data;
+    Scope root = Scope::NewRootScope();
 public:
     Network& add(NetworkLayer& layer, string name) {
         srand(time(NULL));
@@ -64,20 +71,75 @@ public:
                 y_data.push_back(array[indices[j]][k]);
                 vector<float> actuals = { array[indices[j]][k] };
 
-                //error for the output layer
+                // calculate error for the output layer
                 vector<float> outputs  = this->getNetWorkOutput(dataItem) ;
                 this->calculateErrorOuterLayer(outputs, actuals);
                 int hiddenLayerCount = networkLayers.size() - 2;
 
-                
+                // calculate error for all the inner layers
                 auto it = &networkLayers.back();
                 for(int i = hiddenLayerCount; i >= 1; i--) {
                     it = it - i;
                     this->calculateInnerLayerError(it);
                 }
+
+                //update the weights of all the layers
+                this->updateWeights(learningRate);
                 break;
             }
             break;
+        }
+    }
+
+    /*
+    * After the error has been calculated, the next step is to
+    * updated the weights based on backpropagation errors.
+    */
+    void updateWeights(float learningRate) {
+        for(auto it = this->networkLayers.begin(); it != this->networkLayers.end()-1; it++) {
+
+            // create tensors from vectors
+            int rows = it->getWeights().size();
+            int columns = it->getWeights()[0].size();
+            
+            tensorflow::Tensor weights(tensorflow::DT_FLOAT, tensorflow::TensorShape({rows, columns})); 
+            auto weightsMap = weights.tensor<float, 2>();
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    weightsMap(i, j) = (it->getWeights())[i][j];
+                }
+            }
+
+            auto currentLayerNeurons = it->getNeurons().begin();
+            int lengthCurrentLayerNeurons = it->getNeurons().size();
+            tensorflow::Tensor inputs(tensorflow::DT_FLOAT, tensorflow::TensorShape({1, lengthCurrentLayerNeurons}));
+            auto inputsMap = inputs.tensor<float, 2>();
+            for (int i = 0; i < lengthCurrentLayerNeurons; i++) {
+                inputsMap(0, i) = currentLayerNeurons->getValue();
+                currentLayerNeurons++;
+            }
+
+            auto nextLayerNeurons = (it+1)->getNeurons().begin();
+            int lengthNextLayerNeurons = (it+1)->getNeurons().size();
+            tensorflow::Tensor errors(tensorflow::DT_FLOAT, tensorflow::TensorShape({lengthNextLayerNeurons, 1}));
+            auto errorsMap = errors.tensor<float, 2>();
+            for (int i = 0; i < lengthNextLayerNeurons; i++) {
+                errorsMap(i, 0) = currentLayerNeurons->getValue();
+                nextLayerNeurons++;
+            }
+            
+            auto dot = MatMul(root, Input(errors), Input(inputs));
+            auto withLearning = Multiply(root, Input(learningRate), Input(dot.product));
+            auto updatedWeights = Sum(root, Input(weights), Input(withLearning.z));
+            std::vector<Tensor> outputs;
+            ClientSession session(root);
+            TF_CHECK_OK(session.Run({updatedWeights}, &outputs));
+            auto newMap = outputs[0].tensor<float, 2>();
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    (it->getWeights())[i][j] = newMap(i, j);
+                }
+            }
         }
     }
 
@@ -129,11 +191,18 @@ public:
         return indices;
     }
 
+    /*
+    * load the feature vector into the neurons
+    */
     void loadInputData(float data[]) {
         NetworkLayer* firstLayer = &networkLayers.front();
         firstLayer->initializeNeurons(data);
     }
 
+    /*
+    * Given a feature vector, perform feed forward to 
+    * calculate the network output
+    */
     vector<float> getNetWorkOutput(float dataItem[]) {
         feedForward(dataItem);
         auto back = networkLayers.back();
@@ -145,6 +214,9 @@ public:
         return outputs;
     }
 
+    /*
+    * Perform the feed forward algo
+    */
     void feedForward(float dataItem[]) {
         auto it = networkLayers.begin();
         it->initializeNeurons(dataItem);
@@ -154,6 +226,9 @@ public:
         it->forwardPropagate();
     }
 
+    /*
+    * calculates derivate of the transfer function
+    */
     float transferDerivative(float output){
         return output*(1.0-output);         
     }
